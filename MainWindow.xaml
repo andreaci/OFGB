@@ -16,7 +16,8 @@
         <CheckBox x:Name="cb7" Margin="5,120,0,0" Checked="Checked" Unchecked="Unchecked" Content="Disable Personalized Ads" />
         <CheckBox x:Name="cb8" Margin="5,140,0,0" Checked="Checked" Unchecked="Unchecked" Content="Disable &quot;Tailored Experiences&quot;" />
         <CheckBox x:Name="cb9" Margin="5,160,0,0" Checked="Checked" Unchecked="Unchecked" Content="Disable Start Menu Ads" />
-
-        <TextBlock Foreground="#FFAAAA" Width="210" Margin="7,180,0,0" TextWrapping="Wrap" Text="* You May Need To Restart For Changes To Apply"/>
+        <CheckBox x:Name="cb10" Margin="5,180,0,0" Checked="Checked" Unchecked="Unchecked" Content="Disable BING in Start Menu" />
+        
+        <TextBlock Foreground="#FFAAAA" Width="210" Margin="5,207,0,0" TextWrapping="Wrap" Text="* You May Need To Restart For Changes To Apply"/>
     </Grid>
 </Window>

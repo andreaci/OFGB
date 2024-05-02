@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows.Controls;
+using System.Diagnostics;
 
 namespace OFGB
 {
@@ -32,43 +33,47 @@ namespace OFGB
         private void InitializeKeys()
         {
             // Sync provider notifications in File Explorer
-            bool key1 = CreateKey($"{HK_CURV}\\Explorer\\Advanced", "ShowSyncProviderNotifications");
+            bool key1 = GetKeyValue($"{HK_CURV}\\Explorer\\Advanced", "ShowSyncProviderNotifications");
             cb1.IsChecked = !key1;
 
             // Get fun facts, tips, tricks, and more on your lock screen
-            bool key2 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "RotatingLockScreenOverlayEnabled");
-            bool key3 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338387Enabled");
+            bool key2 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "RotatingLockScreenOverlayEnabled");
+            bool key3 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338387Enabled");
             cb2.IsChecked = !key2 && !key3;
 
             // Show suggested content in Settings app
-            bool key4 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338393Enabled");
-            bool key5 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-353694Enabled");
-            bool key6 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-353696Enabled");
+            bool key4 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338393Enabled");
+            bool key5 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-353694Enabled");
+            bool key6 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-353696Enabled");
             cb3.IsChecked = !key4 && !key5 && !key6;
 
             // Get tips and suggestions when using Windows
-            bool key7 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338389Enabled");
+            bool key7 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-338389Enabled");
             cb4.IsChecked = !key7;
 
             // Suggest ways to get the most out of Windows and finish setting up this device
-            bool key8 = CreateKey($"{HK_CURV}\\UserProfileEngagement", "ScoobeSystemSettingEnabled");
+            bool key8 = GetKeyValue($"{HK_CURV}\\UserProfileEngagement", "ScoobeSystemSettingEnabled");
             cb5.IsChecked = !key8;
 
             // Show me the Windows welcome experience after updates and occasionally when I sign in to highlight what's new and suggested
-            bool key9 = CreateKey($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-310093Enabled");
+            bool key9 = GetKeyValue($"{HK_CURV}\\ContentDeliveryManager", "SubscribedContent-310093Enabled");
             cb6.IsChecked = !key9;
 
             // Let apps show me personalized ads by using my advertising ID
-            bool key10 = CreateKey($"{HK_CURV}\\AdvertisingInfo", "Enabled");
+            bool key10 = GetKeyValue($"{HK_CURV}\\AdvertisingInfo", "Enabled");
             cb7.IsChecked = !key10;
 
             // Tailored experiences
-            bool key11 = CreateKey($"{HK_CURV}\\Privacy", "TailoredExperiencesWithDiagnosticDataEnabled");
+            bool key11 = GetKeyValue($"{HK_CURV}\\Privacy", "TailoredExperiencesWithDiagnosticDataEnabled");
             cb8.IsChecked = !key11;
 
             // "Show recommendations for tips, shortcuts, new apps, and more" on Start
-            bool key12 = CreateKey($"{HK_CURV}\\Explorer\\Advanced", "Start_IrisRecommendations");
+            bool key12 = GetKeyValue($"{HK_CURV}\\Explorer\\Advanced", "Start_IrisRecommendations");
             cb9.IsChecked = !key12;
+
+            // Show bing search results
+            bool key13 = GetKeyValue($"Software\\Policies\\Microsoft\\Windows\\Explorer", "DisableSearchBoxSuggestions", false);
+            cb10.IsChecked = key13;
         }
 
         private bool CreateKey(string loc, string key)
@@ -89,10 +94,23 @@ namespace OFGB
             }
             else
             {
+                Debugger.Break();
                 throw new InvalidOperationException("Error Initializing While Creating Key");
             }
         }
 
+        private bool GetKeyValue(string loc, string key, bool defaultValue = false)
+        {
+            if (Registry.CurrentUser.OpenSubKey(loc, true) is not null)
+            {
+                RegistryKey? keyRef = Registry.CurrentUser.OpenSubKey(loc, false);
+                if (keyRef is not null)
+                    return (Convert.ToInt32(keyRef.GetValue(key)) != 0);
+                
+            }
+
+            return defaultValue;
+        }
         private bool toggleOptions(string name, bool enable)
         {
             int value = !enable ? unchecked((int)0x00000001u) : unchecked((int)0x00000000u);
@@ -128,6 +146,10 @@ namespace OFGB
                     break;
                 case "cb9":
                     Registry.SetValue($"{HK_CU}\\{HK_CURV}\\Explorer\\Advanced", "Start_IrisRecommendations", value);
+                    break;
+                case "cb10":
+                    value = value == 1 ? 0 : 1;
+                    Registry.SetValue($"{HK_CU}\\Software\\Policies\\Microsoft\\Windows\\Explorer", "DisableSearchBoxSuggestions", value);
                     break;
             }
             return true;
